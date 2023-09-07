@@ -1620,6 +1620,16 @@ fn escape_4() {
 }
 
 #[test]
+fn escape_5() {
+    // Unlike MySQL, the '' (substitute) character does not have an escape sequence in Postgres
+    let test = "";
+    assert_eq!(
+        PostgresQueryBuilder.escape_string(test),
+        "".to_owned()
+    );
+}
+
+#[test]
 fn delete_returning_all_columns() {
     assert_eq!(
         Query::delete()
