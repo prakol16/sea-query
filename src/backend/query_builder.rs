@@ -1086,13 +1086,14 @@ pub trait QueryBuilder:
             #[cfg(feature = "with-uuid")]
             Value::Uuid(Some(v)) => write!(s, "'{v}'").unwrap(),
             #[cfg(feature = "postgres-array")]
-            Value::Array(_, Some(v)) => write!(
+            Value::Array(ty, Some(v)) => write!(
                 s,
-                "ARRAY [{}]",
+                "ARRAY [{}]::{}",
                 v.iter()
                     .map(|element| self.value_to_string(element))
                     .collect::<Vec<String>>()
-                    .join(",")
+                    .join(","),
+                self.prepare_array_type(ty.clone())
             )
             .unwrap(),
             #[cfg(feature = "with-ipnetwork")]
@@ -1101,6 +1102,71 @@ pub trait QueryBuilder:
             Value::MacAddress(Some(v)) => write!(s, "'{v}'").unwrap(),
         };
         s
+    }
+
+    // #[cfg(feature = "postgres-array")]
+    /// Given an array type, convert it to a string
+    fn prepare_array_type(&self, ty: ArrayType) -> String {
+        String::from(match ty {
+            ArrayType::Bool => "bool",
+            ArrayType::TinyInt | ArrayType::TinyUnsigned
+            | ArrayType::SmallInt | ArrayType::SmallUnsigned => "smallint",
+            ArrayType::Int | ArrayType::Unsigned => "integer",
+            ArrayType::BigInt | ArrayType::BigUnsigned => "bigint",
+            ArrayType::Float => "real",
+            ArrayType::Double => "double precision",
+            ArrayType::String => "text",
+            ArrayType::Char => "char",
+            ArrayType::Bytes => "bytea",
+
+            #[cfg(feature = "with-json")]
+            ArrayType::Json => "jsonb",
+
+            #[cfg(feature = "with-chrono")]
+            ArrayType::ChronoDate => "date",
+
+            #[cfg(feature = "with-chrono")]
+            ArrayType::ChronoTime => "time",
+
+            #[cfg(feature = "with-chrono")]
+            ArrayType::ChronoDateTime => "timestamp",
+
+            #[cfg(feature = "with-chrono")]
+            ArrayType::ChronoDateTimeUtc => "timestamp",
+
+            #[cfg(feature = "with-chrono")]
+            ArrayType::ChronoDateTimeLocal => "timestamp",
+
+            #[cfg(feature = "with-chrono")]
+            ArrayType::ChronoDateTimeWithTimeZone => "timestamp with time zone",
+
+            #[cfg(feature = "with-time")]
+            ArrayType::TimeDate => "date",
+
+            #[cfg(feature = "with-time")]
+            ArrayType::TimeTime => "time",
+
+            #[cfg(feature = "with-time")]
+            ArrayType::TimeDateTime => "timestamp",
+
+            #[cfg(feature = "with-time")]
+            ArrayType::TimeDateTimeWithTimeZone => "timestamp with time zone",
+
+            #[cfg(feature = "with-uuid")]
+            ArrayType::Uuid => "uuid",
+
+            #[cfg(feature = "with-rust_decimal")]
+            ArrayType::Decimal => "decimal",
+
+            #[cfg(feature = "with-bigdecimal")]
+            ArrayType::BigDecimal => "decimal",
+
+            #[cfg(feature = "with-ipnetwork")]
+            ArrayType::IpNetwork => "cidr",
+
+            #[cfg(feature = "with-mac_address")]
+            ArrayType::MacAddress => "macaddr",
+        })
     }
 
     #[doc(hidden)]
