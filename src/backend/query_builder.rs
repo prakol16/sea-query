@@ -1088,7 +1088,7 @@ pub trait QueryBuilder:
             #[cfg(feature = "postgres-array")]
             Value::Array(ty, Some(v)) => write!(
                 s,
-                "ARRAY [{}]::{}",
+                "ARRAY [{}]::{}[]",
                 v.iter()
                     .map(|element| self.value_to_string(element))
                     .collect::<Vec<String>>()
